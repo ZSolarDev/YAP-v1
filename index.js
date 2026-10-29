@@ -42,16 +42,27 @@ async function ensureBackendReady() {
 
     console.log("[BACKEND] Initializing Scramjet v2 Controller & Transport...");
     try {
+        // 1. Ensure the Service Worker is registered and active before controller boot
+        if ("serviceWorker" in navigator) {
+            await navigator.serviceWorker.register(BACKEND + "/sw.js", { scope: "/" });
+            await navigator.serviceWorker.ready;
+        }
+
         const wispUrl = "wss://yap-v1.loophole.site/wisp/";
         const transport = new LibcurlClient({ wisp: wispUrl });
 
-        // Pull Controller and defaultConfig safely from the global window objects loaded by classic scripts
         const { Controller } = window.$scramjetController;
         const scramjetConfig = window.$scramjet ? window.$scramjet.defaultConfig : {};
 
+        // 2. Instantiate controller with explicit CDN paths for WASM and core scripts
         controller = new Controller({
             serviceworker: BACKEND + "/sw.js",
             transport: transport,
+            config: {
+                scramjetPath: "https://unpkg.com/@mercuryworkshop/scramjet@2.0.67-alpha.2/dist/scramjet.js",
+                wasmPath: "https://unpkg.com/@mercuryworkshop/scramjet@2.0.67-alpha.2/dist/scramjet.wasm",
+                injectPath: "https://unpkg.com/@mercuryworkshop/scramjet-controller@0.0.14/dist/controller.inject.js",
+            },
             scramjetConfig: scramjetConfig,
         });
 
