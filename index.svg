@@ -169,9 +169,6 @@
     </html>
   </foreignObject>
 
-  <!-- Load scripts directly from the Loophole domain -->
-  <script src="https://yap-v1.loophole.site/scram/scramjet.all.js"></script>
-  <script src="https://yap-v1.loophole.site/baremux/index.js"></script>
   <script><![CDATA[
     (function() {
       var ns = "http://www.w3.org/1999/xhtml";
@@ -186,48 +183,40 @@
       };
     })();
 
-    self.__yepBase = function() {
-      var n = location.pathname, a = n.indexOf("/internal/");
-      return -1 !== a ? n.substring(0, a + 1) : new URL("./", location.href).pathname;
-    }();
-
     const BACKEND = "https://yap-v1.loophole.site";
-    const base = self.__yepBase;
+    
+    const base = "https://cdn.jsdelivr.net/gh/ZSolarDev/YEP-v1@v1.1.4/";
 
     (function() {
       var d = document;
       var b = d.querySelector("body");
       var ns = "http://www.w3.org/1999/xhtml";
 
-      // Sequential loader using namespace-aware createElementNS and body append
       var srcs = [
-        BACKEND + "/scram/scramjet.all.js",
-        BACKEND + "/baremux/index.js",
-        base + "search.js",
         base + "index.js"
       ];
 
-      var pending = srcs.length;
-      function done() {
-        if (--pending === 0) {
-          console.log("[YEP] All backend & local scripts loaded sequentially.");
-          d.dispatchEvent(new Event("DOMContentLoaded"));
-          if (typeof createNewTab === "function" && document.querySelectorAll(".browser-tab").length === 0) {
-            createNewTab();
-          }
-        }
+      function loadScript(u, cb) {
+          var s = d.createElementNS(ns, "script");
+          s.setAttribute("src", u);
+          s.setAttribute("type", "module");
+          s.async = false;
+          s.onload = cb;
+          s.onerror = function() {
+              console.error("[YEP] Failed to load script from jsDelivr, trying local fallback:", u);
+              // Fallback to local loophole backend if jsDelivr fails
+              var fallback = document.createElementNS(ns, "script");
+              fallback.setAttribute("src", BACKEND + "/index.js");
+              fallback.setAttribute("type", "module");
+              b.appendChild(fallback);
+          };
+          b.appendChild(s);
       }
 
       srcs.forEach(function(u) {
-        var s = d.createElementNS(ns, "script");
-        s.setAttribute("src", u);
-        s.async = false;
-        s.onload = done;
-        s.onerror = function() {
-          console.error("[YEP] Failed to load script:", u);
-          done();
-        };
-        b.appendChild(s);
+          loadScript(u, function() {
+              console.log("[YEP] Script loaded successfully:", u);
+          });
       });
     })();
   ]]></script>
