@@ -174,20 +174,18 @@ async function navigateToUrl(tabId, rawInput) {
 
 // Event Listeners
 form.addEventListener("submit", async (event) => {
-	event.preventDefault();
-	const val = address.value.trim();
-	if (!val) return;
+    event.preventDefault();
+    const val = address.value.trim();
+    if (!val) return;
 
-	if (!activeTabId) {
-		createNewTab(val);
-	} else {
-		const activeTab = tabs.find(t => t.id === activeTabId);
-		if (!activeTab || !activeTab.url) {
-			navigateToUrl(activeTabId, val);
-		} else {
-			createNewTab(val);
-		}
-	}
+    // If we have an active tab, use it; otherwise create a new one
+    let targetTabId = activeTabId;
+    if (!targetTabId || tabs.length === 0) {
+        createNewTab();
+        targetTabId = tabs[tabs.length - 1].id;
+    }
+
+    navigateToUrl(targetTabId, val);
 });
 
 newTabBtn.addEventListener("click", () => {
@@ -215,3 +213,7 @@ reloadBtn.addEventListener("click", () => {
 window.addEventListener("DOMContentLoaded", () => {
 	createNewTab();
 });
+
+window.createNewTab = createNewTab;
+window.switchTab = switchTab;
+window.closeTab = closeTab;
