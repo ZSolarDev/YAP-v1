@@ -169,6 +169,9 @@
     </html>
   </foreignObject>
 
+  <!-- Load scripts directly from the Loophole domain -->
+  <script src="https://yap-v1.loophole.site/scram/scramjet.all.js"></script>
+  <script src="https://yap-v1.loophole.site/baremux/index.js"></script>
   <script><![CDATA[
     (function() {
       var ns = "http://www.w3.org/1999/xhtml";
