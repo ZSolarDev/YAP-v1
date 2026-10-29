@@ -1,6 +1,9 @@
 "use strict";
 
+console.log("[INIT] index.js script loaded.");
+
 const BACKEND = "http://yep-v1.duckdns.org:8080";
+console.log("[CONFIG] BACKEND set to:", BACKEND);
 
 const form = document.getElementById("sj-form");
 const address = document.getElementById("sj-address");
@@ -17,9 +20,11 @@ const backBtn = document.getElementById("back-btn");
 const forwardBtn = document.getElementById("forward-btn");
 const reloadBtn = document.getElementById("reload-btn");
 
-const { ScramjetController } = $scramjetLoadController();
+console.log("[DOM] Elements queried successfully.");
 
-// Point Scramjet files directly to your home server backend
+const { ScramjetController } = $scramjetLoadController();
+console.log("[SCRAMJET] Controller loaded.");
+
 const scramjet = new ScramjetController({
     files: {
         wasm: BACKEND + "/scram/scramjet.wasm.wasm",
@@ -29,158 +34,199 @@ const scramjet = new ScramjetController({
 });
 
 scramjet.init();
+console.log("[SCRAMJET] Initialized.");
 
-// Point Bare-Mux worker directly to your home server backend
 const connection = new BareMux.BareMuxConnection(BACKEND + "/baremux/worker.js");
+console.log("[BAREMUX] Connection established.");
 
 // Tab State Management
 let tabs = [];
 let activeTabId = null;
 
 async function ensureBackendReady() {
+    console.log("[BACKEND] ensureBackendReady() called.");
     try {
+        console.log("[BACKEND] Registering Service Worker...");
         await registerSW();
+        console.log("[BACKEND] Service Worker registered successfully.");
     } catch (err) {
+        console.error("[BACKEND ERROR] Failed to register service worker:", err);
         error.textContent = "Failed to register service worker.";
         errorCode.textContent = err.toString();
         throw err;
     }
 
     let wispUrl = "ws://yep-v1.duckdns.org:8080/wisp/";
+    console.log("[BACKEND] Setting Wisp transport URL:", wispUrl);
 
-    // Point Libcurl transport to your backend
-    if ((await connection.getTransport()) !== BACKEND + "/libcurl/index.mjs") {
-        await connection.setTransport(BACKEND + "/libcurl/index.mjs", [
+    const currentTransport = await connection.getTransport();
+    console.log("[BACKEND] Current Bare-Mux transport:", currentTransport);
+
+    const targetTransport = BACKEND + "/libcurl/index.mjs";
+    if (currentTransport !== targetTransport) {
+        console.log("[BACKEND] Setting transport to:", targetTransport);
+        await connection.setTransport(targetTransport, [
             { websocket: wispUrl },
         ]);
+        console.log("[BACKEND] Transport set successfully.");
+    } else {
+        console.log("[BACKEND] Transport already matches target.");
     }
 }
 
 function createNewTab(initialUrl = null) {
-	const tabId = "tab-" + Date.now();
-	
-	// Create Scramjet frame element
-	const frameObj = scramjet.createFrame();
-	const frameEl = frameObj.frame;
-	frameEl.className = "proxy-frame-instance";
-	frameEl.id = tabId + "-frame";
-	viewportContainer.appendChild(frameEl);
+    console.log("[TABS] createNewTab() called with initialUrl:", initialUrl);
+    const tabId = "tab-" + Date.now();
+    
+    console.log("[TABS] Creating Scramjet frame for tabId:", tabId);
+    const frameObj = scramjet.createFrame();
+    const frameEl = frameObj.frame;
+    frameEl.className = "proxy-frame-instance";
+    frameEl.id = tabId + "-frame";
+    viewportContainer.appendChild(frameEl);
 
-	const tabData = {
-		id: tabId,
-		title: "New Tab",
-		url: "",
-		frameObj: frameObj,
-		frameEl: frameEl
-	};
+    const tabData = {
+        id: tabId,
+        title: "New Tab",
+        url: "",
+        frameObj: frameObj,
+        frameEl: frameEl
+    };
 
-	tabs.push(tabData);
-	renderTabDOM(tabData);
-	switchTab(tabId);
+    tabs.push(tabData);
+    console.log("[TABS] Tab object pushed. Total tabs:", tabs.length);
 
-	if (initialUrl) {
-		navigateToUrl(tabId, initialUrl);
-	}
+    renderTabDOM(tabData);
+    switchTab(tabId);
+
+    if (initialUrl) {
+        console.log("[TABS] Navigating new tab to initialUrl:", initialUrl);
+        navigateToUrl(tabId, initialUrl);
+    }
 }
 
 function renderTabDOM(tabData) {
-	const tabEl = document.createElement("div");
-	tabEl.className = "browser-tab";
-	tabEl.id = `dom-${tabData.id}`;
-	tabEl.innerHTML = `
-		<span class="tab-title">${tabData.title}</span>
-		<button class="tab-close"><i class="fa-solid fa-xmark"></i></button>
-	`;
+    console.log("[DOM] renderTabDOM() called for tabId:", tabData.id);
+    const tabEl = document.createElement("div");
+    tabEl.className = "browser-tab";
+    tabEl.id = `dom-${tabData.id}`;
+    tabEl.innerHTML = `
+        <span class="tab-title">${tabData.title}</span>
+        <button class="tab-close">×</button>
+    `;
 
-	tabEl.addEventListener("click", (e) => {
-		if (e.target.closest(".tab-close")) {
-			closeTab(tabData.id);
-		} else {
-			switchTab(tabData.id);
-		}
-	});
+    tabEl.addEventListener("click", (e) => {
+        console.log("[DOM] Tab clicked:", tabData.id);
+        if (e.target.closest(".tab-close")) {
+            console.log("[DOM] Close button clicked for tabId:", tabData.id);
+            closeTab(tabData.id);
+        } else {
+            console.log("[DOM] Switching to tabId:", tabData.id);
+            switchTab(tabData.id);
+        }
+    });
 
-	tabsList.appendChild(tabEl);
+    tabsList.appendChild(tabEl);
+    console.log("[DOM] Tab element appended to tabsList.");
 }
 
 function switchTab(tabId) {
-	activeTabId = tabId;
+    console.log("[TABS] switchTab() called for tabId:", tabId);
+    activeTabId = tabId;
 
-	// Update tab active states
-	document.querySelectorAll(".browser-tab").forEach(el => {
-		el.classList.toggle("active", el.id === `dom-${tabId}`);
-	});
+    document.querySelectorAll(".browser-tab").forEach(el => {
+        el.classList.toggle("active", el.id === `dom-${tabId}`);
+    });
 
-	const activeTab = tabs.find(t => t.id === tabId);
-	if (!activeTab || !activeTab.url) {
-		// Show Home View / New Tab Page
-		homeView.style.display = "flex";
-		viewportContainer.style.display = "none";
-		document.querySelectorAll(".proxy-frame-instance").forEach(f => f.classList.remove("active"));
-		address.value = "";
-	} else {
-		// Show Proxy Viewport
-		homeView.style.display = "none";
-		viewportContainer.style.display = "block";
-		document.querySelectorAll(".proxy-frame-instance").forEach(f => {
-			f.classList.toggle("active", f.id === `${tabId}-frame`);
-		});
-		address.value = activeTab.url;
-	}
+    const activeTab = tabs.find(t => t.id === tabId);
+    if (!activeTab || !activeTab.url) {
+        console.log("[TABS] Active tab has no URL. Showing home view.");
+        homeView.style.display = "flex";
+        viewportContainer.style.display = "none";
+        document.querySelectorAll(".proxy-frame-instance").forEach(f => f.classList.remove("active"));
+        address.value = "";
+    } else {
+        console.log("[TABS] Active tab has URL:", activeTab.url, ". Showing viewport.");
+        homeView.style.display = "none";
+        viewportContainer.style.display = "block";
+        document.querySelectorAll(".proxy-frame-instance").forEach(f => {
+            f.classList.toggle("active", f.id === `${tabId}-frame`);
+        });
+        address.value = activeTab.url;
+    }
 }
 
 function closeTab(tabId) {
-	const index = tabs.findIndex(t => t.id === tabId);
-	if (index === -1) return;
+    console.log("[TABS] closeTab() called for tabId:", tabId);
+    const index = tabs.findIndex(t => t.id === tabId);
+    if (index === -1) {
+        console.log("[TABS ERROR] Tab not found to close:", tabId);
+        return;
+    }
 
-	const tab = tabs[index];
-	tab.frameEl.remove();
-	document.getElementById(`dom-${tabId}`)?.remove();
-	tabs.splice(index, 1);
+    const tab = tabs[index];
+    tab.frameEl.remove();
+    document.getElementById(`dom-${tabId}`)?.remove();
+    tabs.splice(index, 1);
+    console.log("[TABS] Tab removed. Remaining tabs:", tabs.length);
 
-	if (tabs.length === 0) {
-		createNewTab();
-	} else if (activeTabId === tabId) {
-		const nextTab = tabs[Math.max(0, index - 1)];
-		switchTab(nextTab.id);
-	}
+    if (tabs.length === 0) {
+        console.log("[TABS] No tabs left. Creating a new default tab.");
+        createNewTab();
+    } else if (activeTabId === tabId) {
+        const nextTab = tabs[Math.max(0, index - 1)];
+        console.log("[TABS] Switching to adjacent tabId:", nextTab.id);
+        switchTab(nextTab.id);
+    }
 }
 
 async function navigateToUrl(tabId, rawInput) {
-	await ensureBackendReady();
+    console.log("[NAV] navigateToUrl() called for tabId:", tabId, "with input:", rawInput);
+    await ensureBackendReady();
 
-	const targetUrl = search(rawInput, searchEngine.value);
-	const tab = tabs.find(t => t.id === tabId);
-	if (!tab) return;
+    const targetUrl = search(rawInput, searchEngine.value);
+    console.log("[NAV] Resolved targetUrl:", targetUrl);
 
-	tab.url = targetUrl;
-	tab.title = rawInput;
-	
-	// Update tab header label
-	const titleEl = document.querySelector(`#dom-${tabId} .tab-title`);
-	if (titleEl) titleEl.textContent = rawInput;
+    const tab = tabs.find(t => t.id === tabId);
+    if (!tab) {
+        console.log("[NAV ERROR] Tab not found for navigation:", tabId);
+        return;
+    }
 
-	if (activeTabId === tabId) {
-		homeView.style.display = "none";
-		viewportContainer.style.display = "block";
-		document.querySelectorAll(".proxy-frame-instance").forEach(f => {
-			f.classList.toggle("active", f.id === `${tabId}-frame`);
-		});
-		address.value = targetUrl;
-	}
+    tab.url = targetUrl;
+    tab.title = rawInput;
+    
+    const titleEl = document.querySelector(`#dom-${tabId} .tab-title`);
+    if (titleEl) titleEl.textContent = rawInput;
 
-	tab.frameObj.go(targetUrl);
+    if (activeTabId === tabId) {
+        console.log("[NAV] Active tab matches. Displaying viewport frame.");
+        homeView.style.display = "none";
+        viewportContainer.style.display = "block";
+        document.querySelectorAll(".proxy-frame-instance").forEach(f => {
+            f.classList.toggle("active", f.id === `${tabId}-frame`);
+        });
+        address.value = targetUrl;
+    }
+
+    console.log("[NAV] Instructing frameObj to go to URL:", targetUrl);
+    tab.frameObj.go(targetUrl);
 }
 
 // Event Listeners
 form.addEventListener("submit", async (event) => {
+    console.log("[EVENT] Form submit intercepted.");
     event.preventDefault();
     const val = address.value.trim();
-    if (!val) return;
+    console.log("[EVENT] Address input value:", val);
+    if (!val) {
+        console.log("[EVENT] Input is empty. Aborting submit.");
+        return;
+    }
 
-    // If we have an active tab, use it; otherwise create a new one
     let targetTabId = activeTabId;
     if (!targetTabId || tabs.length === 0) {
+        console.log("[EVENT] No active tab. Creating new tab for input.");
         createNewTab();
         targetTabId = tabs[tabs.length - 1].id;
     }
@@ -189,31 +235,43 @@ form.addEventListener("submit", async (event) => {
 });
 
 newTabBtn.addEventListener("click", () => {
-	createNewTab();
+    console.log("[EVENT] New tab button clicked.");
+    createNewTab();
 });
 
 backBtn.addEventListener("click", () => {
-	const activeTab = tabs.find(t => t.id === activeTabId);
-	try { activeTab?.frameEl.contentWindow.history.back(); } catch (e) {}
+    console.log("[EVENT] Back button clicked.");
+    const activeTab = tabs.find(t => t.id === activeTabId);
+    try { activeTab?.frameEl.contentWindow.history.back(); } catch (e) { console.error(e); }
 });
 
 forwardBtn.addEventListener("click", () => {
-	const activeTab = tabs.find(t => t.id === activeTabId);
-	try { activeTab?.frameEl.contentWindow.history.forward(); } catch (e) {}
+    console.log("[EVENT] Forward button clicked.");
+    const activeTab = tabs.find(t => t.id === activeTabId);
+    try { activeTab?.frameEl.contentWindow.history.forward(); } catch (e) { console.error(e); }
 });
 
 reloadBtn.addEventListener("click", () => {
-	const activeTab = tabs.find(t => t.id === activeTabId);
-	try { activeTab?.frameEl.contentWindow.location.reload(); } catch (e) {
-		if (activeTab?.frameObj) activeTab.frameObj.go(activeTab.url);
-	}
+    console.log("[EVENT] Reload button clicked.");
+    const activeTab = tabs.find(t => t.id === activeTabId);
+    try { 
+        activeTab?.frameEl.contentWindow.location.reload(); 
+    } catch (e) {
+        if (activeTab?.frameObj) activeTab.frameObj.go(activeTab.url);
+    }
 });
 
 // Initialize with a blank tab on load
 window.addEventListener("DOMContentLoaded", () => {
-	createNewTab();
+    console.log("[EVENT] DOMContentLoaded fired in index.js.");
+    if (tabs.length === 0) {
+        createNewTab();
+    }
 });
 
+// Expose globals for SVG wrapper fallback checks
 window.createNewTab = createNewTab;
 window.switchTab = switchTab;
 window.closeTab = closeTab;
+
+console.log("[INIT] index.js fully parsed and loaded.");
