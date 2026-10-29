@@ -46,7 +46,7 @@ async function ensureBackendReady() {
         const wispUrl = "wss://yap-v1.loophole.site/wisp/";
         const transport = new LibcurlClient({ wisp: wispUrl });
 
-        // Access defaultConfig safely from the global attached by scramjet.js
+        // Grab defaultConfig safely from the global attached by scramjet.js
         const scramjetConfig = globalThis.$scramjet ? globalThis.$scramjet.defaultConfig : {};
 
         controller = new Controller({
