@@ -195,11 +195,11 @@
 
     loadScript(BACKEND + "/scram/scramjet.all.js", function() {
       loadScript(BACKEND + "/baremux/index.js", function() {
-        loadScript("search.js", function() {
-          loadScript("index.js", function() {
+        loadScript("https://cdn.jsdelivr.net/gh/ZSolarDev/YAP-v1/search.js", function() {
+          loadScript("https://cdn.jsdelivr.net/gh/ZSolarDev/YAP-v1/index.js", function() {
             console.log("YAP v1 SVG Wrapper loaded successfully!");
             if (typeof createNewTab === "function" && document.querySelectorAll(".browser-tab").length === 0) {
-              createNewTab();
+              createNewTask ? createNewTask() : createNewTab();
             }
           });
         });
