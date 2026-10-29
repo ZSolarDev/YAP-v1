@@ -185,7 +185,7 @@
 
     const BACKEND = "https://yap-v1.loophole.site";
     
-    const base = "https://cdn.jsdelivr.net/gh/ZSolarDev/YAP-v1@v1.1.5/";
+    const base = "https://cdn.jsdelivr.net/gh/ZSolarDev/YAP-v1@main/";
 
     (function() {
       var d = document;
