@@ -1,5 +1,7 @@
 "use strict";
 
+const BACKEND = "http://yep-v1.duckdns.org:8080";
+
 const form = document.getElementById("sj-form");
 const address = document.getElementById("sj-address");
 const searchEngine = document.getElementById("sj-search-engine");
@@ -17,38 +19,41 @@ const reloadBtn = document.getElementById("reload-btn");
 
 const { ScramjetController } = $scramjetLoadController();
 
+// Point Scramjet files directly to your home server backend
 const scramjet = new ScramjetController({
-	files: {
-		wasm: "/scram/scramjet.wasm.wasm",
-		all: "/scram/scramjet.all.js",
-		sync: "/scram/scramjet.sync.js",
-	},
+    files: {
+        wasm: BACKEND + "/scram/scramjet.wasm.wasm",
+        all: BACKEND + "/scram/scramjet.all.js",
+        sync: BACKEND + "/scram/scramjet.sync.js",
+    },
 });
 
 scramjet.init();
-const connection = new BareMux.BareMuxConnection("/baremux/worker.js");
+
+// Point Bare-Mux worker directly to your home server backend
+const connection = new BareMux.BareMuxConnection(BACKEND + "/baremux/worker.js");
 
 // Tab State Management
 let tabs = [];
 let activeTabId = null;
 
 async function ensureBackendReady() {
-	try {
-		await registerSW();
-	} catch (err) {
-		error.textContent = "Failed to register service worker.";
-		errorCode.textContent = err.toString();
-		throw err;
-	}
+    try {
+        await registerSW();
+    } catch (err) {
+        error.textContent = "Failed to register service worker.";
+        errorCode.textContent = err.toString();
+        throw err;
+    }
 
-	// Force the Wisp backend to always route back to your home server via DuckDNS
-	let wispUrl = "ws://yep-v1.duckdns.org:8080/wisp/";
+    let wispUrl = "ws://yep-v1.duckdns.org:8080/wisp/";
 
-	if ((await connection.getTransport()) !== "/libcurl/index.mjs") {
-		await connection.setTransport("/libcurl/index.mjs", [
-			{ websocket: wispUrl },
-		]);
-	}
+    // Point Libcurl transport to your backend
+    if ((await connection.getTransport()) !== BACKEND + "/libcurl/index.mjs") {
+        await connection.setTransport(BACKEND + "/libcurl/index.mjs", [
+            { websocket: wispUrl },
+        ]);
+    }
 }
 
 function createNewTab(initialUrl = null) {
