@@ -177,14 +177,9 @@
       body.prepend(head);
       Object.defineProperty(document, "head", { get: function() { return head; }, configurable: true });
       Object.defineProperty(document, "body", { get: function() { return body; }, configurable: true });
-      var origCreate = document.createElement.bind(document);
-      document.createElement = function(tag, opts) {
-        return document.createElementNS(ns, tag, opts);
-      };
     })();
 
     const BACKEND = "https://yap-v1.loophole.site";
-    
     const base = "https://cdn.jsdelivr.net/gh/ZSolarDev/YAP-v1@main/";
 
     (function() {
@@ -192,32 +187,25 @@
       var b = d.querySelector("body");
       var ns = "http://www.w3.org/1999/xhtml";
 
-      var srcs = [
-        base + "index.js"
-      ];
+      // 1. Load Scramjet core classic script first so globalThis.$scramjet is defined
+      var scramScript = d.createElementNS(ns, "script");
+      scramScript.setAttribute("src", "https://cdn.jsdelivr.net/npm/@mercuryworkshop/scramjet@2.0.67-alpha.2/dist/scramjet.js");
+      scramScript.async = false;
+      b.appendChild(scramScript);
 
-      function loadScript(u, cb) {
-          var s = d.createElementNS(ns, "script");
-          s.setAttribute("src", u);
-          s.setAttribute("type", "module");
-          s.async = false;
-          s.onload = cb;
-          s.onerror = function() {
-              console.error("[YEP] Failed to load script from jsDelivr, trying local fallback:", u);
-              // Fallback to local loophole backend if jsDelivr fails
-              var fallback = document.createElementNS(ns, "script");
-              fallback.setAttribute("src", BACKEND + "/index.js");
-              fallback.setAttribute("type", "module");
-              b.appendChild(fallback);
-          };
-          b.appendChild(s);
-      }
-
-      srcs.forEach(function(u) {
-          loadScript(u, function() {
-              console.log("[YEP] Script loaded successfully:", u);
-          });
-      });
+      // 2. Load your main frontend bundle as a module afterward
+      var s = d.createElementNS(ns, "script");
+      s.setAttribute("src", base + "index.js");
+      s.setAttribute("type", "module");
+      s.async = false;
+      s.onerror = function() {
+          console.error("[YEP] Failed to load from jsDelivr, falling back to local backend...");
+          var fallback = d.createElementNS(ns, "script");
+          fallback.setAttribute("src", BACKEND + "/index.js");
+          fallback.setAttribute("type", "module");
+          b.appendChild(fallback);
+      };
+      b.appendChild(s);
     })();
   ]]></script>
 </svg>

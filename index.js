@@ -3,7 +3,6 @@
 console.log("[INIT] Scramjet v2 index.js loaded.");
 
 import LibcurlClient from "https://cdn.jsdelivr.net/npm/@mercuryworkshop/libcurl-transport/+esm";
-import { defaultConfig } from "https://cdn.jsdelivr.net/npm/@mercuryworkshop/scramjet@2.0.67-alpha.2/+esm";
 import { Controller } from "https://cdn.jsdelivr.net/npm/@mercuryworkshop/scramjet-controller/+esm";
 
 const BACKEND = "https://yap-v1.loophole.site";
@@ -47,10 +46,13 @@ async function ensureBackendReady() {
         const wispUrl = "wss://yap-v1.loophole.site/wisp/";
         const transport = new LibcurlClient({ wisp: wispUrl });
 
+        // Access defaultConfig safely from the global attached by scramjet.js
+        const scramjetConfig = globalThis.$scramjet ? globalThis.$scramjet.defaultConfig : {};
+
         controller = new Controller({
             serviceworker: BACKEND + "/sw.js",
             transport: transport,
-            scramjetConfig: defaultConfig,
+            scramjetConfig: scramjetConfig,
         });
 
         await controller.wait();
