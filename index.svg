@@ -188,7 +188,7 @@
       return -1 !== a ? n.substring(0, a + 1) : new URL("./", location.href).pathname;
     }();
 
-    const BACKEND = "https://yep-v1.duckdns.org";
+    const BACKEND = "https://yap-v1.loophole.site";
     const base = self.__yepBase;
 
     (function() {
