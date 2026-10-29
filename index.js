@@ -3,7 +3,7 @@
 console.log("[INIT] Scramjet v2 index.js loaded.");
 
 import LibcurlClient from "https://cdn.jsdelivr.net/npm/@mercuryworkshop/libcurl-transport/+esm";
-import { defaultConfig } from "https://cdn.jsdelivr.net/npm/@mercuryworkshop/scramjet/+esm";
+import { defaultConfig } from "https://cdn.jsdelivr.net/npm/@mercuryworkshop/scramjet@2.0.67-alpha.2/+esm";
 import { Controller } from "https://cdn.jsdelivr.net/npm/@mercuryworkshop/scramjet-controller/+esm";
 
 const BACKEND = "https://yap-v1.loophole.site";
