@@ -1,0 +1,89 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1.0, shrink-to-fit=no"
+        />
+        <title>Scramjet Browser</title>
+
+        <link rel="shortcut icon" href="favicon.ico" />
+        
+        <script src="/scram/scramjet.all.js"></script>
+        <script src="/baremux/index.js"></script>
+        
+        <link rel="stylesheet" href="index.css" />
+        <!-- FontAwesome for browser icons -->
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+        <script src="register-sw.js" defer></script>
+        <script src="search.js" defer></script>
+        <script src="index.js" defer></script>
+    </head>
+
+    <body>
+        <!-- Browser Chrome Toolbar -->
+        <div id="browser-toolbar">
+            <!-- Tabs Bar -->
+            <div id="tab-container">
+                <div id="tabs-list">
+                    <!-- Dynamic tabs inserted here -->
+                </div>
+                <button id="new-tab-btn" title="New Tab"><i class="fa-solid fa-plus"></i></button>
+            </div>
+
+            <!-- Navigation Bar -->
+            <div id="nav-bar">
+                <button id="back-btn" title="Back"><i class="fa-solid fa-arrow-left"></i></button>
+                <button id="forward-btn" title="Forward"><i class="fa-solid fa-arrow-right"></i></button>
+                <button id="reload-btn" title="Reload"><i class="fa-solid fa-rotate-right"></i></button>
+                
+                <form id="sj-form">
+                    <input
+                        id="sj-search-engine"
+                        value="https://www.google.com/search?q=%s"
+                        type="hidden"
+                    />
+                    <div id="address-wrapper">
+                        <i class="fa-solid fa-lock security-icon"></i>
+                        <input id="sj-address" type="text" placeholder="Search the web or type a URL..." autocomplete="off" spellcheck="false" />
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Home / New Tab View Container -->
+        <div id="home-view" class="view-container">
+            <div title="Scramjet Logo" class="flex-center logo-wrapper header-center">
+                <img class="logo" src="sj.png" alt="Scramjet" />
+                <h1>Scramjet | MW</h1>
+            </div>
+            <div class="flex-center desc left-margin">
+                <p>
+                    Scramjet is an experimental interception based web proxy designed to
+                    evade internet censorship, bypass arbitrary web browser restrictions and
+                    innovate web proxy technologies.
+                </p>
+            </div>
+            <div class="desc left-margin error-box">
+                <p id="sj-error"></p>
+                <pre id="sj-error-code"></pre>
+            </div>
+        </div>
+
+        <!-- Frame Viewport Container (Where proxy frames live) -->
+        <div id="viewport-container"></div>
+
+        <footer>
+            <div>
+                <a title="The Mercury Workshop GitHub organization" href="https://github.com/MercuryWorkshop">Mercury Workshop</a>
+                <a title="The example demo app for Scramjet" href="https://github.com/MercuryWorkshop/Scramjet-Demo">GitHub</a>
+                <a title="License information" href="credits.html">Credits</a>
+            </div>
+            <div>
+                <span>Scramjet &copy; MW 2025</span>
+            </div>
+        </footer>
+    </body>
+</html>
