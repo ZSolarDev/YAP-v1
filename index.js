@@ -38,25 +38,66 @@ function search(input, template) {
 }
 
 async function ensureBackendReady() {
-    if (controller) return;
+    if (controller) {
+        console.log("[DIAGNOSTIC] ensureBackendReady: Controller already exists, returning cached instance.");
+        return;
+    }
 
     console.log("[BACKEND] Initializing Scramjet v2 Controller & Transport...");
     try {
-        let swRegistration = null;
+        console.log("[DIAGNOSTIC] Checking navigator.serviceWorker availability...");
         if ("serviceWorker" in navigator) {
-            swRegistration = await navigator.serviceWorker.register(BACKEND + "/sw.js", { scope: "/" });
+            console.log("[DIAGNOSTIC] serviceWorker is supported. Registering script:", BACKEND + "/sw.js");
+            const reg = await navigator.serviceWorker.register(BACKEND + "/sw.js", { scope: "/" });
+            console.log("[DIAGNOSTIC] ServiceWorker registration object returned:", reg);
+            console.log("[DIAGNOSTIC] Waiting for navigator.serviceWorker.ready...");
             await navigator.serviceWorker.ready;
+            console.log("[DIAGNOSTIC] navigator.serviceWorker.ready resolved.");
+
+            console.log("[DIAGNOSTIC] Current navigator.serviceWorker.controller:", navigator.serviceWorker.controller);
+            console.log("[DIAGNOSTIC] reg.active:", reg.active);
+
+            if (!navigator.serviceWorker.controller && reg.active) {
+                console.warn("[DIAGNOSTIC] Warning: Worker is active but navigator.serviceWorker.controller is null.");
+                if (!sessionStorage.getItem("sj_reloaded")) {
+                    console.log("[DIAGNOSTIC] Setting session flag and triggering reload to bind controller...");
+                    sessionStorage.setItem("sj_reloaded", "true");
+                    window.location.reload();
+                    return;
+                } else {
+                    console.log("[DIAGNOSTIC] Reload flag already set. Proceeding anyway...");
+                }
+            }
+        } else {
+            console.warn("[DIAGNOSTIC] serviceWorker NOT supported in navigator!");
         }
 
         const wispUrl = "wss://yap-v1.loophole.site/wisp/";
+        console.log("[DIAGNOSTIC] Initializing LibcurlClient with wisp URL:", wispUrl);
         const transport = new LibcurlClient({ wisp: wispUrl });
+        console.log("[DIAGNOSTIC] LibcurlClient initialized:", transport);
 
+        console.log("[DIAGNOSTIC] Checking window.$scramjetController:", window.$scramjetController);
+        if (!window.$scramjetController || !window.$scramjetController.Controller) {
+            throw new Error("window.$scramjetController or Controller class is missing/undefined!");
+        }
         const { Controller } = window.$scramjetController;
-        const scramjetConfig = window.$scramjet ? window.$scramjet.defaultConfig : {};
 
-        // Explicitly pass the active worker reference and valid unpkg asset routes
-        controller = new Controller({
-            serviceworker: swRegistration?.active || navigator.serviceWorker.controller,
+        console.log("[DIAGNOSTIC] Checking window.$scramjet:", window.$scramjet);
+        const scramjetConfig = window.$scramjet ? window.$scramjet.defaultConfig : {};
+        console.log("[DIAGNOSTIC] Resolved scramjetConfig:", scramjetConfig);
+
+        const assetFiles = {
+            wasm: "https://unpkg.com/@mercuryworkshop/scramjet@2.0.67-alpha.2/dist/scramjet.wasm",
+            worker: "https://unpkg.com/@mercuryworkshop/scramjet@2.0.67-alpha.2/dist/scramjet.worker.js",
+            client: "https://unpkg.com/@mercuryworkshop/scramjet@2.0.67-alpha.2/dist/scramjet.client.js",
+        };
+        console.log("[DIAGNOSTIC] Explicit asset files mapping:", assetFiles);
+
+        scramjetConfig.files = assetFiles;
+
+        const controllerOptions = {
+            serviceworker: BACKEND + "/sw.js",
             transport: transport,
             config: {
                 scramjetPath: "https://unpkg.com/@mercuryworkshop/scramjet@2.0.67-alpha.2/dist/scramjet.js",
@@ -64,14 +105,22 @@ async function ensureBackendReady() {
                 injectPath: "https://unpkg.com/@mercuryworkshop/scramjet-controller@0.0.14/dist/controller.inject.js",
             },
             scramjetConfig: scramjetConfig,
-        });
+        };
+        console.log("[DIAGNOSTIC] Instantiating new Controller with options:", controllerOptions);
 
+        controller = new Controller(controllerOptions);
+        console.log("[DIAGNOSTIC] Controller instance created successfully:", controller);
+
+        console.log("[DIAGNOSTIC] Awaiting controller.wait()...");
         await controller.wait();
-        console.log("[CONTROLLER] Scramjet v2 initialized successfully!");
+        console.log("[CONTROLLER] Scramjet v2 initialized and waited successfully!");
     } catch (err) {
-        console.error("[BACKEND ERROR] Failed to initialize Scramjet v2:", err);
+        console.error("[BACKEND ERROR] Detailed failure inside ensureBackendReady:", err);
+        console.error("[BACKEND ERROR] Error name:", err.name);
+        console.error("[BACKEND ERROR] Error message:", err.message);
+        console.error("[BACKEND ERROR] Error stack:", err.stack);
         error.textContent = "Failed to initialize Scramjet v2 controller.";
-        errorCode.textContent = err.toString();
+        errorCode.textContent = err.toString() + "\n\nStack:\n" + (err.stack || "");
         throw err;
     }
 }
