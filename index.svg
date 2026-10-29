@@ -183,27 +183,50 @@
       };
     })();
 
+    // Dynamic base path resolver just like your working DayDream X template
+    self.__yepBase = function() {
+      var n = location.pathname, a = n.indexOf("/internal/");
+      return -1 !== a ? n.substring(0, a + 1) : new URL("./", location.href).pathname;
+    }();
+
     const BACKEND = "http://yep-v1.duckdns.org:8080";
+    const base = self.__yepBase;
 
-    function loadScript(src, cb) {
-      var s = document.createElement("script");
-      s.src = src;
-      s.async = false;
-      if (cb) s.onload = cb;
-      document.head.appendChild(s);
-    }
+    (function() {
+      var d = document;
+      var b = d.querySelector("body");
+      var ns = "http://www.w3.org/1999/xhtml";
 
-    loadScript(BACKEND + "/scram/scramjet.all.js", function() {
-      loadScript(BACKEND + "/baremux/index.js", function() {
-        loadScript("https://cdn.jsdelivr.net/gh/ZSolarDev/YAP-v1/search.js", function() {
-          loadScript("https://cdn.jsdelivr.net/gh/ZSolarDev/YAP-v1/index.js", function() {
-            console.log("YAP v1 SVG Wrapper loaded successfully!");
-            if (typeof createNewTab === "function" && document.querySelectorAll(".browser-tab").length === 0) {
-              createNewTask ? createNewTask() : createNewTab();
-            }
-          });
-        });
+      // Sequential loader using namespace-aware createElementNS and body append
+      var srcs = [
+        BACKEND + "/scram/scramjet.all.js",
+        BACKEND + "/baremux/index.js",
+        base + "search.js",
+        base + "index.js"
+      ];
+
+      var pending = srcs.length;
+      function done() {
+        if (--pending === 0) {
+          console.log("[YEP] All backend & local scripts loaded sequentially.");
+          d.dispatchEvent(new Event("DOMContentLoaded"));
+          if (typeof createNewTab === "function" && document.querySelectorAll(".browser-tab").length === 0) {
+            createNewTab();
+          }
+        }
+      }
+
+      srcs.forEach(function(u) {
+        var s = d.createElementNS(ns, "script");
+        s.setAttribute("src", u);
+        s.async = false;
+        s.onload = done;
+        s.onerror = function() {
+          console.error("[YEP] Failed to load script:", u);
+          done();
+        };
+        b.appendChild(s);
       });
-    });
+    })();
   ]]></script>
 </svg>
