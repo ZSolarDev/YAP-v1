@@ -187,13 +187,19 @@
       var b = d.querySelector("body");
       var ns = "http://www.w3.org/1999/xhtml";
 
-      // 1. Load Scramjet core global script first to populate globalThis.$scramjet
-      var scramScript = d.createElementNS(ns, "script");
-      scramScript.setAttribute("src", "https://cdn.jsdelivr.net/npm/@mercuryworkshop/scramjet@2.0.67-alpha.2/dist/scramjet.js");
-      scramScript.async = false;
-      b.appendChild(scramScript);
+      // 1. Load Scramjet core runtime (registers window.$scramjet)
+      var scram = d.createElementNS(ns, "script");
+      scram.setAttribute("src", "https://unpkg.com/@mercuryworkshop/scramjet@2.0.67-alpha.2/dist/scramjet.js");
+      scram.async = false;
+      b.appendChild(scram);
 
-      // 2. Load your main frontend bundle as a module afterward
+      // 2. Load Scramjet Controller runtime (registers window.$scramjetController)
+      var ctrl = d.createElementNS(ns, "script");
+      ctrl.setAttribute("src", "https://unpkg.com/@mercuryworkshop/scramjet-controller/controller.api.js");
+      ctrl.async = false;
+      b.appendChild(ctrl);
+
+      // 3. Load your main frontend bundle as a module afterward
       var s = d.createElementNS(ns, "script");
       s.setAttribute("src", base + "index.js");
       s.setAttribute("type", "module");
