@@ -63,17 +63,17 @@
               border-bottom-color: #121214;
           }
           .tab-title { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-          .tab-close { background: transparent; border: none; color: #71717a; cursor: pointer; border-radius: 50%; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; }
+          .tab-close { background: transparent; border: none; color: #71717a; cursor: pointer; border-radius: 50%; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; font-size: 12px; }
           .tab-close:hover { background-color: #3f3f46; color: #fff; }
-          #new-tab-btn { background: transparent; border: none; color: #a1a1aa; width: 28px; height: 28px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+          #new-tab-btn { background: transparent; border: none; color: #a1a1aa; width: 28px; height: 28px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; }
           #new-tab-btn:hover { background-color: #27272a; color: #fff; }
           #nav-bar { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background-color: #18181b; }
-          #nav-bar button { background: transparent; border: none; color: #a1a1aa; width: 32px; height: 32px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+          #nav-bar button { background: transparent; border: none; color: #a1a1aa; width: 32px; height: 32px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; }
           #nav-bar button:hover { background-color: #27272a; color: #f4f4f5; }
           #sj-form { flex: 1; display: flex; }
-          #address-wrapper { flex: 1; display: flex; align-items: center; background-color: #09090b; border: 1px solid #27272a; border-radius: 6px; padding: 0 10px; height: 36px; }
+          #address-wrapper { flex: 1; display: flex; align-items: center; background-color: #09090b; border: 1px solid #27272a; border-radius: 6px; padding: 0 10px; height: 36px; gap: 8px; }
           #address-wrapper:focus-within { border-color: #6366f1; }
-          .security-icon { color: #10b981; font-size: 12px; margin-right: 8px; }
+          .security-icon { color: #10b981; font-size: 11px; }
           #sj-address { flex: 1; background: none; border: none; color: #fff; font-size: 14px; outline: none; font-family: inherit; padding: 0; margin: 0; width: 100%; }
           #home-view { flex: 1; display: flex; flex-direction: column; align-items: center; overflow-y: auto; padding-bottom: 40px; }
           #viewport-container { flex: 1; position: relative; background-color: #fff; display: none; }
@@ -97,16 +97,16 @@
         <div id="browser-toolbar">
             <div id="tab-container">
                 <div id="tabs-list"></div>
-                <button id="new-tab-btn" title="New Tab"><i class="fa-solid fa-plus"></i></button>
+                <button id="new-tab-btn" title="New Tab">+</button>
             </div>
             <div id="nav-bar">
-                <button id="back-btn" title="Back"><i class="fa-solid fa-arrow-left"></i></button>
-                <button id="forward-btn" title="Forward"><i class="fa-solid fa-arrow-right"></i></button>
-                <button id="reload-btn" title="Reload"><i class="fa-solid fa-rotate-right"></i></button>
+                <button id="back-btn" title="Back">←</button>
+                <button id="forward-btn" title="Forward">→</button>
+                <button id="reload-btn" title="Reload">⟳</button>
                 <form id="sj-form">
                     <input id="sj-search-engine" value="https://www.google.com/search?q=%s" type="hidden" />
                     <div id="address-wrapper">
-                        <i class="fa-solid fa-lock security-icon"></i>
+                        <span class="security-icon">🔒</span>
                         <input id="sj-address" type="text" placeholder="Search the web or type a URL..." autocomplete="off" spellcheck="false" />
                     </div>
                 </form>
@@ -155,13 +155,7 @@
       };
     })();
 
-    // Load FontAwesome safely via script/link injection to avoid XML entity parsing crashes
-    var fa = document.createElement("link");
-    fa.rel = "stylesheet";
-    fa.href = "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css";
-    document.head.appendChild(fa);
-
-    // 2. Define Backend URL and Load Dependencies Dynamically from DuckDNS & v1.0.1 root
+    // 2. Define Backend URL and Load Dependencies Dynamically from DuckDNS & Root
     const BACKEND = "http://yep-v1.duckdns.org:8080";
 
     function loadScript(src, cb) {
@@ -172,12 +166,12 @@
       document.head.appendChild(s);
     }
 
-    // Load helper scripts first, then main index logic from v1.0.1 root
+    // Load helper scripts first, then main index logic from root
     loadScript(BACKEND + "/scram/scramjet.all.js", function() {
       loadScript(BACKEND + "/baremux/index.js", function() {
-        loadScript("https://cdn.jsdelivr.net/gh/ZSolarDev/YAP-v1@v1.0.1/search.js", function() {
-          loadScript("https://cdn.jsdelivr.net/gh/ZSolarDev/YAP-v1@v1.0.1/index.js", function() {
-            console.log("YAP v1 SVG Wrapper loaded successfully!");
+        loadScript("search.js", function() {
+          loadScript("index.js", function() {
+            console.log("YAP v1 SVG Wrapper loaded successfully without external dependencies!");
           });
         });
       });
