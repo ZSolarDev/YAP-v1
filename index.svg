@@ -5,9 +5,8 @@
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no" />
         <title>Yet Another Proxy (Scramjet v2)</title>
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
         <style>
-          @import url("https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,300;0,400;0,500;1,300;1,400&display=swap");
+          @import url("https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,300;0,400;0,500;1,300;1,400&amp;display=swap");
 
           * { box-sizing: border-box; }
           body {
@@ -156,7 +155,13 @@
       };
     })();
 
-    // 2. Define Backend URL and Load Dependencies Dynamically from DuckDNS
+    // Load FontAwesome safely via script/link injection to avoid XML entity parsing crashes
+    var fa = document.createElement("link");
+    fa.rel = "stylesheet";
+    fa.href = "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css";
+    document.head.appendChild(fa);
+
+    // 2. Define Backend URL and Load Dependencies Dynamically from DuckDNS & v1.0.1 root
     const BACKEND = "http://yep-v1.duckdns.org:8080";
 
     function loadScript(src, cb) {
@@ -167,11 +172,11 @@
       document.head.appendChild(s);
     }
 
-    // Load helper scripts first, then main index logic
+    // Load helper scripts first, then main index logic from v1.0.1 root
     loadScript(BACKEND + "/scram/scramjet.all.js", function() {
       loadScript(BACKEND + "/baremux/index.js", function() {
-        loadScript("https://cdn.jsdelivr.net/gh/ZSolarDev/YAP-v1@v1.0.0/search.js", function() {
-          loadScript("https://cdn.jsdelivr.net/gh/ZSolarDev/YAP-v1@v1.0.0/index.js", function() {
+        loadScript("https://cdn.jsdelivr.net/gh/ZSolarDev/YAP-v1@v1.0.1/search.js", function() {
+          loadScript("https://cdn.jsdelivr.net/gh/ZSolarDev/YAP-v1@v1.0.1/index.js", function() {
             console.log("YAP v1 SVG Wrapper loaded successfully!");
           });
         });
