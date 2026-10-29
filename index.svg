@@ -183,13 +183,12 @@
       };
     })();
 
-    // Dynamic base path resolver just like your working DayDream X template
     self.__yepBase = function() {
       var n = location.pathname, a = n.indexOf("/internal/");
       return -1 !== a ? n.substring(0, a + 1) : new URL("./", location.href).pathname;
     }();
 
-    const BACKEND = "http://yep-v1.duckdns.org:8080";
+    const BACKEND = "https://yep-v1.duckdns.org";
     const base = self.__yepBase;
 
     (function() {

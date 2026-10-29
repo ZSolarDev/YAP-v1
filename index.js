@@ -1,8 +1,6 @@
 "use strict";
 
 console.log("[INIT] index.js script loaded.");
-
-const BACKEND = "http://yep-v1.duckdns.org:8080";
 console.log("[CONFIG] BACKEND set to:", BACKEND);
 
 const form = document.getElementById("sj-form");
