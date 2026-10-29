@@ -46,13 +46,12 @@ async function ensureBackendReady() {
             const reg = await navigator.serviceWorker.register(BACKEND + "/sw.js", { scope: "/" });
             await navigator.serviceWorker.ready;
             
-            // If the service worker is installed but hasn't claimed this client yet, wait for it
-            if (!navigator.serviceWorker.controller) {
-                await new Promise((resolve) => {
-                    navigator.serviceWorker.addEventListener("controllerchange", () => resolve(), { once: true });
-                    // Fallback timeout just in case
-                    setTimeout(resolve, 1500);
-                });
+            // Force registration update and client claim
+            await reg.update();
+            if (reg.active && !navigator.serviceWorker.controller) {
+                // If not controlled yet, reload or force controller assignment
+                window.location.reload();
+                return;
             }
         }
 
@@ -61,6 +60,13 @@ async function ensureBackendReady() {
 
         const { Controller } = window.$scramjetController;
         const scramjetConfig = window.$scramjet ? window.$scramjet.defaultConfig : {};
+
+        // Explicitly point all asset locations to unpkg to prevent naked 404s
+        scramjetConfig.files = {
+            wasm: "https://unpkg.com/@mercuryworkshop/scramjet@2.0.67-alpha.2/dist/scramjet.wasm",
+            worker: "https://unpkg.com/@mercuryworkshop/scramjet@2.0.67-alpha.2/dist/scramjet.worker.js",
+            client: "https://unpkg.com/@mercuryworkshop/scramjet@2.0.67-alpha.2/dist/scramjet.client.js",
+        };
 
         controller = new Controller({
             serviceworker: BACKEND + "/sw.js",
