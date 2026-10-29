@@ -42,19 +42,10 @@ async function ensureBackendReady() {
 
     console.log("[BACKEND] Initializing Scramjet v2 Controller & Transport...");
     try {
+        let swRegistration = null;
         if ("serviceWorker" in navigator) {
-            const reg = await navigator.serviceWorker.register(BACKEND + "/sw.js", { scope: "/" });
+            swRegistration = await navigator.serviceWorker.register(BACKEND + "/sw.js", { scope: "/" });
             await navigator.serviceWorker.ready;
-            
-            // Ensure the active service worker is fully recognized by navigator.serviceWorker.controller
-            if (!navigator.serviceWorker.controller && reg.active) {
-                // If not yet controlling this client, force reload once to bind it
-                if (!sessionStorage.getItem("sw_reloaded")) {
-                    sessionStorage.setItem("sw_reloaded", "true");
-                    window.location.reload();
-                    return;
-                }
-            }
         }
 
         const wispUrl = "wss://yap-v1.loophole.site/wisp/";
@@ -63,15 +54,9 @@ async function ensureBackendReady() {
         const { Controller } = window.$scramjetController;
         const scramjetConfig = window.$scramjet ? window.$scramjet.defaultConfig : {};
 
-        // Explicitly map files to prevent the naked scramjet.wasm 404
-        scramjetConfig.files = {
-            wasm: "https://unpkg.com/@mercuryworkshop/scramjet@2.0.67-alpha.2/dist/scramjet.wasm",
-            worker: "https://unpkg.com/@mercuryworkshop/scramjet@2.0.67-alpha.2/dist/scramjet.worker.js",
-            client: "https://unpkg.com/@mercuryworkshop/scramjet@2.0.67-alpha.2/dist/scramjet.client.js",
-        };
-
+        // Explicitly pass the active worker reference and valid unpkg asset routes
         controller = new Controller({
-            serviceworker: BACKEND + "/sw.js",
+            serviceworker: swRegistration?.active || navigator.serviceWorker.controller,
             transport: transport,
             config: {
                 scramjetPath: "https://unpkg.com/@mercuryworkshop/scramjet@2.0.67-alpha.2/dist/scramjet.js",
