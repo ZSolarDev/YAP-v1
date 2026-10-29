@@ -42,10 +42,13 @@ async function ensureBackendReady() {
 
     console.log("[BACKEND] Initializing Scramjet v2 Controller & Transport...");
     try {
-        // 1. Ensure the Service Worker is registered and active before controller boot
         if ("serviceWorker" in navigator) {
-            await navigator.serviceWorker.register(BACKEND + "/sw.js", { scope: "/" });
+            const reg = await navigator.serviceWorker.register(BACKEND + "/sw.js", { scope: "/" });
             await navigator.serviceWorker.ready;
+            if (reg.active) {
+                // Force claim so the controller immediately recognizes the active SW client
+                reg.active.postMessage({ type: "SCRAMJET_CLAIM" });
+            }
         }
 
         const wispUrl = "wss://yap-v1.loophole.site/wisp/";
@@ -54,7 +57,6 @@ async function ensureBackendReady() {
         const { Controller } = window.$scramjetController;
         const scramjetConfig = window.$scramjet ? window.$scramjet.defaultConfig : {};
 
-        // 2. Instantiate controller with explicit CDN paths for WASM and core scripts
         controller = new Controller({
             serviceworker: BACKEND + "/sw.js",
             transport: transport,
