@@ -195,7 +195,7 @@
 
       // 2. Load Scramjet Controller runtime (registers window.$scramjetController)
       var ctrl = d.createElementNS(ns, "script");
-      ctrl.setAttribute("src", "https://unpkg.com/@mercuryworkshop/scramjet-controller/controller.api.js");
+      ctrl.setAttribute("src", "https://unpkg.com/@mercuryworkshop/scramjet-controller@0.0.14/dist/controller.api.js");
       ctrl.async = false;
       b.appendChild(ctrl);
 
