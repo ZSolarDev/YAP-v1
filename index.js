@@ -2,9 +2,9 @@
 
 console.log("[INIT] Scramjet v2 index.js loaded.");
 
-import LibcurlClient from "https://yap-v1.loophole.site/libcurl/index.mjs";
-import { defaultConfigDev } from "https://yap-v1.loophole.site/scram/scramjet.js";
-import { Controller } from "https://yap-v1.loophole.site/controller/controller.api.js";
+import LibcurlClient from "https://cdn.jsdelivr.net/npm/@mercuryworkshop/libcurl-transport/+esm";
+import { defaultConfigDev } from "https://cdn.jsdelivr.net/npm/@mercuryworkshop/scramjet/+esm";
+import { Controller } from "https://cdn.jsdelivr.net/npm/@mercuryworkshop/scramjet-controller/+esm";
 
 const BACKEND = "https://yap-v1.loophole.site";
 
@@ -27,13 +27,11 @@ let controller = null;
 let tabs = [];
 let activeTabId = null;
 
-// Helper function to resolve search vs direct URL input
 function search(input, template) {
     try {
         new URL(input);
         return input;
     } catch (_) {
-        // Not a valid URL, treat as search query
         if (!input.includes(".") || input.includes(" ")) {
             return template.replace("%s", encodeURIComponent(input));
         }
@@ -105,10 +103,14 @@ function switchTab(tabId) {
     if (!activeTab || !activeTab.url) {
         homeView.style.display = "flex";
         viewportContainer.style.display = "none";
+        document.querySelectorAll(".proxy-frame-instance").forEach(f => f.classList.remove("active"));
         address.value = "";
     } else {
         homeView.style.display = "none";
         viewportContainer.style.display = "block";
+        document.querySelectorAll(".proxy-frame-instance").forEach(f => {
+            f.classList.toggle("active", f.id === `${tabId}-frame`);
+        });
         address.value = activeTab.url;
     }
 }
@@ -116,11 +118,18 @@ function switchTab(tabId) {
 function closeTab(tabId) {
     const index = tabs.findIndex(t => t.id === tabId);
     if (index === -1) return;
-    tabs[index].frameEl.remove();
+
+    const tab = tabs[index];
+    tab.frameEl.remove();
     document.getElementById(`dom-${tabId}`)?.remove();
     tabs.splice(index, 1);
-    if (tabs.length === 0) createNewTab();
-    else if (activeTabId === tabId) switchTab(tabs[Math.max(0, index - 1)].id);
+
+    if (tabs.length === 0) {
+        createNewTab();
+    } else if (activeTabId === tabId) {
+        const nextTab = tabs[Math.max(0, index - 1)];
+        switchTab(nextTab.id);
+    }
 }
 
 async function navigateToUrl(tabId, rawInput) {
@@ -131,7 +140,19 @@ async function navigateToUrl(tabId, rawInput) {
 
     tab.url = targetUrl;
     tab.title = rawInput;
-    document.querySelector(`#dom-${tabId} .tab-title`).textContent = rawInput;
+
+    const titleEl = document.querySelector(`#dom-${tabId} .tab-title`);
+    if (titleEl) titleEl.textContent = rawInput;
+
+    if (activeTabId === tabId) {
+        homeView.style.display = "none";
+        viewportContainer.style.display = "block";
+        document.querySelectorAll(".proxy-frame-instance").forEach(f => {
+            f.classList.toggle("active", f.id === `${tabId}-frame`);
+        });
+        address.value = targetUrl;
+    }
+
     tab.frameObj.go(targetUrl);
 }
 
@@ -139,13 +160,44 @@ form.addEventListener("submit", async (event) => {
     event.preventDefault();
     const val = address.value.trim();
     if (!val) return;
-    let targetTabId = activeTabId || (await createNewTab(), tabs[tabs.length - 1].id);
+
+    let targetTabId = activeTabId;
+    if (!targetTabId || tabs.length === 0) {
+        await createNewTab();
+        targetTabId = tabs[tabs.length - 1].id;
+    }
     navigateToUrl(targetTabId, val);
 });
 
 newTabBtn.addEventListener("click", () => createNewTab());
-window.addEventListener("DOMContentLoaded", () => { if (tabs.length === 0) createNewTab(); });
+
+backBtn.addEventListener("click", () => {
+    const activeTab = tabs.find(t => t.id === activeTabId);
+    try { activeTab?.frameEl.contentWindow.history.back(); } catch (e) {}
+});
+
+forwardBtn.addEventListener("click", () => {
+    const activeTab = tabs.find(t => t.id === activeTabId);
+    try { activeTab?.frameEl.contentWindow.history.forward(); } catch (e) {}
+});
+
+reloadBtn.addEventListener("click", () => {
+    const activeTab = tabs.find(t => t.id === activeTabId);
+    try { 
+        activeTab?.frameEl.contentWindow.location.reload(); 
+    } catch (e) {
+        if (activeTab?.frameObj) activeTab.frameObj.go(activeTab.url);
+    }
+});
+
+window.addEventListener("DOMContentLoaded", () => {
+    if (tabs.length === 0) {
+        createNewTab();
+    }
+});
 
 window.createNewTab = createNewTab;
 window.switchTab = switchTab;
 window.closeTab = closeTab;
+
+console.log("[INIT] index.js fully parsed and loaded.");
