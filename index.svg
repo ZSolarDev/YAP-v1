@@ -26,6 +26,7 @@
               border-bottom: 1px solid #27272a;
               user-select: none;
               z-index: 100;
+              flex-shrink: 0;
           }
           #tab-container {
               display: flex;
@@ -34,13 +35,19 @@
               padding: 0 8px;
               gap: 6px;
               background-color: #111113;
+              width: 100%;
           }
           #tabs-list {
               display: flex;
               gap: 4px;
               overflow-x: auto;
               flex: 1;
+              height: 100%;
+              align-items: flex-end;
+              scrollbar-width: none;
           }
+          #tabs-list::-webkit-scrollbar { display: none; }
+          
           .browser-tab {
               display: flex;
               align-items: center;
@@ -48,46 +55,68 @@
               background-color: #18181b;
               color: #a1a1aa;
               padding: 0 12px;
-              height: 30px;
+              height: 32px;
               border-radius: 6px 6px 0 0;
               font-size: 13px;
               cursor: pointer;
               max-width: 180px;
               min-width: 120px;
-              border: 1px solid transparent;
+              border: 1px solid #27272a;
+              border-bottom: none;
           }
           .browser-tab.active {
               background-color: #121214;
               color: #f4f4f5;
-              border-color: #27272a;
-              border-bottom-color: #121214;
+              border-color: #3f3f46;
+              border-bottom: 2px solid #121214;
           }
           .tab-title { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
           .tab-close { background: transparent; border: none; color: #71717a; cursor: pointer; border-radius: 50%; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; font-size: 12px; }
           .tab-close:hover { background-color: #3f3f46; color: #fff; }
-          #new-tab-btn { background: transparent; border: none; color: #a1a1aa; width: 28px; height: 28px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+          
+          #new-tab-btn {
+              background: transparent;
+              border: none;
+              color: #a1a1aa;
+              width: 28px;
+              height: 28px;
+              border-radius: 6px;
+              cursor: pointer;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              font-size: 16px;
+              flex-shrink: 0;
+          }
           #new-tab-btn:hover { background-color: #27272a; color: #fff; }
+
           #nav-bar { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background-color: #18181b; }
           #nav-bar button { background: transparent; border: none; color: #a1a1aa; width: 32px; height: 32px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; }
           #nav-bar button:hover { background-color: #27272a; color: #f4f4f5; }
+          
           #sj-form { flex: 1; display: flex; }
           #address-wrapper { flex: 1; display: flex; align-items: center; background-color: #09090b; border: 1px solid #27272a; border-radius: 6px; padding: 0 10px; height: 36px; gap: 8px; }
           #address-wrapper:focus-within { border-color: #6366f1; }
           .security-icon { color: #10b981; font-size: 11px; }
           #sj-address { flex: 1; background: none; border: none; color: #fff; font-size: 14px; outline: none; font-family: inherit; padding: 0; margin: 0; width: 100%; }
+          
           #home-view { flex: 1; display: flex; flex-direction: column; align-items: center; overflow-y: auto; padding-bottom: 40px; }
-          #viewport-container { flex: 1; position: relative; background-color: #fff; display: none; }
+          #viewport-container { flex: 1; position: relative; background-color: #fff; display: none; width: 100%; height: 100%; }
+          
           .proxy-frame-instance { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; display: none; }
           .proxy-frame-instance.active { display: block; }
+          
           .flex-center { display: flex; justify-content: center; }
           .header-center { align-items: center; flex-direction: column; margin-top: 8vh; }
           .left-margin { margin: 0px 16px; }
           .logo { height: 20vh; }
           .logo-wrapper h1 { color: white; margin-top: 15px; }
           .desc p { width: 560px; color: rgba(253, 253, 253, 0.514); text-align: center; }
+          
           #sj-error { color: #ff6666 !important; white-space: pre-wrap; }
           #sj-error-code { font-size: 12px; color: #fff; font-family: "Courier New", Courier, monospace; }
-          footer { margin: 10px 16px; display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: rgba(255, 255, 255, 0.5); }
+          
+          footer { margin: 10px 16px; display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: rgba(255, 255, 255, 0.5); flex-shrink: 0; }
           footer div { display: flex; gap: 15px; }
           footer a { text-decoration: none; color: rgba(255, 255, 255, 0.7); }
           footer a:hover { text-decoration: underline; color: #fff; }
@@ -141,7 +170,6 @@
   </foreignObject>
 
   <script><![CDATA[
-    // 1. ForeignObject XHTML DOM Namespace Fix
     (function() {
       var ns = "http://www.w3.org/1999/xhtml";
       var body = document.querySelector("body");
@@ -155,7 +183,6 @@
       };
     })();
 
-    // 2. Define Backend URL and Load Dependencies Dynamically from DuckDNS & Root
     const BACKEND = "http://yep-v1.duckdns.org:8080";
 
     function loadScript(src, cb) {
@@ -166,12 +193,14 @@
       document.head.appendChild(s);
     }
 
-    // Load helper scripts first, then main index logic from root
     loadScript(BACKEND + "/scram/scramjet.all.js", function() {
       loadScript(BACKEND + "/baremux/index.js", function() {
         loadScript("search.js", function() {
           loadScript("index.js", function() {
-            console.log("YAP v1 SVG Wrapper loaded successfully without external dependencies!");
+            console.log("YAP v1 SVG Wrapper loaded successfully!");
+            if (typeof createNewTab === "function" && document.querySelectorAll(".browser-tab").length === 0) {
+              createNewTab();
+            }
           });
         });
       });
