@@ -180,26 +180,20 @@
     })();
 
     const BACKEND = "https://yap-v1.loophole.site";
-    const base = "https://cdn.jsdelivr.net/gh/ZSolarDev/YAP-v1@main/";
+    const base = "https://cdn.jsdelivr.net/gh/ZSolarDev/YAP-v1@v1.1.5/";
 
     (function() {
       var d = document;
       var b = d.querySelector("body");
       var ns = "http://www.w3.org/1999/xhtml";
 
-      // 1. Load Scramjet core global script
+      // 1. Load Scramjet core global script first to populate globalThis.$scramjet
       var scramScript = d.createElementNS(ns, "script");
       scramScript.setAttribute("src", "https://cdn.jsdelivr.net/npm/@mercuryworkshop/scramjet@2.0.67-alpha.2/dist/scramjet.js");
       scramScript.async = false;
       b.appendChild(scramScript);
 
-      // 2. Load Scramjet Controller global script
-      var ctrlScript = d.createElementNS(ns, "script");
-      ctrlScript.setAttribute("src", "https://cdn.jsdelivr.net/npm/@mercuryworkshop/scramjet-controller/controller.api.js");
-      ctrlScript.async = false;
-      b.appendChild(ctrlScript);
-
-      // 3. Load your main frontend bundle as a module afterward
+      // 2. Load your main frontend bundle as a module afterward
       var s = d.createElementNS(ns, "script");
       s.setAttribute("src", base + "index.js");
       s.setAttribute("type", "module");
